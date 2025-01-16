@@ -14,10 +14,10 @@ class ExcelController:
             contacts = []
             for _, row in df.iterrows():
                 phone = str(row['Phone']).strip()
-                if phone.startswith('0'):
-                    phone = '62' + phone[1:]
-                elif not phone.startswith('62'):
-                    phone = '62' + phone
+                # if phone.startswith('0'):
+                    # phone = '62' + phone[1:]
+                # elif not phone.startswith('62'):
+                    # phone = '62' + phone
                     
                 contacts.append({
                     'name': str(row['Name']).strip(),

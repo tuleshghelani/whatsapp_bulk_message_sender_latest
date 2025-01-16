@@ -9,6 +9,7 @@ from PyQt6.QtCore import QObject, QTimer
 import threading
 from typing import Callable
 import logging
+import time
 
 logger = logging.getLogger(__name__)
 
@@ -85,4 +86,55 @@ class WhatsAppController(QObject):
             return self.driver is not None and self.is_logged_in
         except Exception as e:
             logger.error(f"Error checking ready state: {str(e)}")
+            return False
+    
+    def send_message(self, phone: str, message: str) -> bool:
+        try:
+            if not self.is_ready():
+                logger.error("WhatsApp is not ready")
+                return False
+            
+            logger.info(f"Attempting to send message to {phone}")
+            
+            # Format phone number
+            phone = str(phone).strip().replace("+", "").replace(" ", "")
+            
+            try:
+                # Use direct URL approach
+                encoded_message = message.replace('\n', '%0A')
+                url = f'https://web.whatsapp.com/send?phone={phone}&text={encoded_message}'
+                self.driver.get(url)
+                
+                # Wait for chat to load
+                wait = WebDriverWait(self.driver, 30)
+                
+                # Wait for message input to be ready
+                message_box = wait.until(EC.presence_of_element_located((
+                    By.CSS_SELECTOR,
+                    'div[data-testid="conversation-compose-box-input"]'
+                )))
+                
+                # Wait for send button and click it
+                send_button = wait.until(EC.element_to_be_clickable((
+                    By.CSS_SELECTOR,
+                    'button[data-testid="compose-btn-send"]'
+                )))
+                send_button.click()
+                
+                # Wait for message to be sent
+                time.sleep(3)
+                
+                logger.info(f"Message sent successfully to {phone}")
+                return True
+                
+            except TimeoutException as e:
+                logger.error(f"Timeout while sending message to {phone}: {str(e)}")
+                return False
+                
+            except Exception as e:
+                logger.error(f"Error sending message to {phone}: {str(e)}")
+                return False
+                
+        except Exception as e:
+            logger.error(f"Critical error sending message to {phone}: {str(e)}")
             return False
