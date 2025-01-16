@@ -78,14 +78,17 @@ class MainWindow(QMainWindow):
     
     def show_login(self):
         try:
-            self.login_window = WhatsAppLoginWindow(self.whatsapp)
-            self.login_window.show()
+            if hasattr(self, 'login_window') and self.login_window is not None:
+                self.login_window.raise_()
+                self.login_window.activateWindow()
+            else:
+                self.login_window = WhatsAppLoginWindow(self.whatsapp, self)
+                self.login_window.show()
         except Exception as e:
             QMessageBox.critical(
                 self,
                 "Error",
-                f"Error opening WhatsApp login: {str(e)}\n\n"
-                "Please ensure you have installed all requirements correctly."
+                f"Error opening WhatsApp login: {str(e)}"
             )
     
     def start_campaign(self):
